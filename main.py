@@ -2,9 +2,10 @@ import cv2 as cv
 import os
 from configparser import ConfigParser
 
-import support.utils as utils
+from support.IOManager import IOManager
 import support.yolo_config as yc
-from support.operating_config import operatingConfig
+from support.OperatingConfig import OperatingConfig
+from support.FrameManager import FrameManager
 
 ############################################################
 # Load and parse configuration file
@@ -17,10 +18,14 @@ config_variables=config_object['VARIABLES']
 #############################################################
 
 #Configs for changing video while running
-op_config = operatingConfig(image_store_dir=f'{config_directories["image_store_dir"]}',
+operatingConfig = OperatingConfig(image_store_dir=f'{config_directories["image_store_dir"]}',
                             resource_dir=f'{config_system["project_root_dir"]}/{config_system["resource_dir"]}',
                             model_config_dir=f'{config_system["project_root_dir"]}/{config_system["model_config_dir"]}',
                             className_file = f'{config_system["project_root_dir"]}/{config_system["className_file"]}')
+
+
+frameManager = FrameManager(operatingConfig=operatingConfig)
+ioManager = IOManager(operatingConfig=operatingConfig)
 
 ###############################################################################
 # Config video capture. 0 is first
@@ -34,9 +39,9 @@ op_config = operatingConfig(image_store_dir=f'{config_directories["image_store_d
 
 # Video file defined above
 CAP_WEBCAM=False
-#cap = cv.VideoCapture(f'{config_system["project_root_dir"]}/{config_system["sample_video"]}')
+cap = cv.VideoCapture(f'{config_system["project_root_dir"]}/{config_system["sample_video"]}')
 #cap = cv.VideoCapture(f'd:/Radar_Support/Hand_Tracking_Full.mp4')
-cap = cv.VideoCapture(f'd:/Radar_Support/GoWeb.mp4')
+#cap = cv.VideoCapture(f'd:/Radar_Support/GoWeb.mp4')
 
 # Jarvis rtsp stream
 #gst = 'rtspsrc location=rtsp://172.20.0.30:8554/unicast latency=10 ! decodebin ! videoconvert ! video/x-raw,format=BGR ! appsink drop=1'
@@ -51,47 +56,38 @@ cap.set(cv.CAP_PROP_FRAME_HEIGHT,900)
 bg_img_orig = cv.imread(f'{config_system["project_root_dir"]}/{config_variables["background_image"]}')
 
 # Run program
-while op_config.RUN_PROGRAM: 
+while operatingConfig.RUN_PROGRAM: 
     ##############################################################
     # Configure screen processing
-    while op_config.CONFIGURE and op_config.RUN_PROGRAM:
+    while operatingConfig.CONFIGURE and operatingConfig.RUN_PROGRAM:
         bg_img = bg_img_orig.copy()
-        utils.write_config_screen(img=bg_img,
-                                  operating_config=op_config)
+        frameManager.write_config_screen(img=bg_img)
         cv.imshow(f'{config_variables["main_window_name"]}', bg_img)
         
         # Handle input for configuration
         k = cv.waitKey(0)
-        utils.handle_config_key_input(img=bg_img,
-                                      key=k,
-                                      operating_config=op_config)
+        ioManager.handle_config_key_input(img=bg_img,
+                                          key=k)
   
     ###############################################################
     # no longer in configure screen
     # start setup for processing images
     load_bg_img = bg_img_orig.copy()
-    utils.write_loading_model(img=load_bg_img,
-                              operating_config=op_config)
+    frameManager.write_loading_model(img=load_bg_img)
     cv.imshow(f'{config_variables["main_window_name"]}', load_bg_img)
         
-    # Check to see if current detection model matches the desired model
-    if not (op_config.detection_model == op_config.modelNet.model_type):
-        op_config.create_modelNet()
-    else: 
-        print(f'Desired detection model already active')
-
     # Completed config, set system to process images
-    op_config.PROCESS_IMAGES = True
+    operatingConfig.PROCESS_IMAGES = True
 
     ###################################################################
     # Main loop for processing images
-    # Image processing is based on op_config paramaters
+    # Image processing is based on operatingConfig paramaters
     # which can be changed at runtime
-    while op_config.PROCESS_IMAGES and op_config.RUN_PROGRAM:
+    while operatingConfig.PROCESS_IMAGES and operatingConfig.RUN_PROGRAM:
         
         success, frame = cap.read()
         if success:
-            op_config.frame_counter += 1
+            operatingConfig.frame_counter += 1
         else:
             break
         
@@ -99,13 +95,12 @@ while op_config.RUN_PROGRAM:
             frame = cv.flip(frame, 1)
         
         # If first frame show image info for debug
-        if op_config.frame_counter == 1:
+        if operatingConfig.frame_counter == 1:
             print(f'Image size: {frame.shape}')
 
         # Image frame will be processed based on the current configuration
-        # stored in op_config
-        processed_frame = utils.process_image(img=frame,
-                                              operating_config=op_config)
+        # stored in operatingConfig
+        processed_frame = frameManager.process_image(img=frame)
 
         # Show the image
         cv.imshow(f'{config_variables["main_window_name"]}',processed_frame)
@@ -116,9 +111,8 @@ while op_config.RUN_PROGRAM:
         # Esc to close, space to write a copy of the image
         # pass any keypress to be processed
         k = cv.waitKey(1)
-        utils.handle_processing_key_input(img=frame,
-                                          key=k,
-                                          operating_config=op_config)     
+        ioManager.handle_processing_key_input(img=frame,
+                                              key=k)     
         #===================================================
 
 #######################################################

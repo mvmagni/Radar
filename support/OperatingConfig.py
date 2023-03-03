@@ -2,11 +2,11 @@ import cv2 as cv
 import os
 import support.yolo_config as yc
 from dataclasses import dataclass, field
-from support.model_net import ModelNet
-from support.Hands import Hands
+#from support.model_net import ModelNet
+#from support.Hands import Hands
 
 @dataclass
-class operatingConfig:
+class OperatingConfig:
     #############################################
     # Init params
     # Where to store screenshots
@@ -20,7 +20,7 @@ class operatingConfig:
     # ModelNet parameters
     # Default modelnet to load
     DEFAULT_MODEL: str = yc.MODEL_YOLOV4N_800_448    
-    modelNet: ModelNet = field(init=False)
+    #modelNet: ModelNet = field(init=False)
     detection_model: str = field(init=False)
 
     # ModelNet - Confidence threshold adjustment amount used in interface
@@ -82,8 +82,6 @@ class operatingConfig:
     def __post_init__(self):
         self.detection_model = self.DEFAULT_MODEL
         self.print_environment()
-        self.create_modelNet()
-        self.create_hand_track()
 
     def increment_show_info_counter(self):
         self.show_runtime_config_until_frame = (self.frame_counter + self.SHOW_RUNTIME_CONFIG_FRAME_INCREMENT)
@@ -93,13 +91,4 @@ class operatingConfig:
         print(f'CUDA enabled devices: {cv.cuda.getCudaEnabledDeviceCount()}')
         print(f'CWD: {os.getcwd()}')
         
-    def create_modelNet(self):
-        self.modelNet= ModelNet(config_dir=self.model_config_dir,
-                                classname_file=self.className_file,
-                                model_type=self.detection_model,
-                                confidence_threshold=self.CONFIDENCE_THRESHOLD,
-                                nms_threshold=self.NMS_THRESHOLD
-                                )
-    
-    def create_hand_track(self):
-        self.mpHands = Hands()
+ 

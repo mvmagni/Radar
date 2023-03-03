@@ -1,11 +1,12 @@
 import cv2
 import mediapipe as mp
-import support.drawing_utils as du
+from support.DrawingManager import DrawingManager
 from support.BoundingBox import BoundingBox
 
 class Hands:
 
     def __init__(self, 
+                 drawingManager: DrawingManager,
                  static_image_mode=False, 
                  max_num_hands=10, 
                  min_detection_confidence=0.5, 
@@ -17,6 +18,7 @@ class Hands:
         :param detectionCon: Minimum Detection Confidence Threshold
         :param minTrackCon: Minimum Tracking Confidence Threshold
         """
+        self.drawingManager = drawingManager
         self.static_image_mode = static_image_mode
         self.max_num_hands = max_num_hands
         self.min_detection_confidence = min_detection_confidence
@@ -93,7 +95,7 @@ class Hands:
                                                self.mp_drawing_styles.get_default_hand_landmarks_style(),
                                                self.mp_drawing_styles.get_default_hand_connections_style())
                     
-                    du.show_bounding_box_modelNet(img=img,
+                    self.drawingManager.show_bounding_box_modelNet(img=img,
                                          bbox=bbox,
                                          classID=None,
                                          class_name=myHand["type"],
