@@ -1,6 +1,8 @@
 import cv2 as cv
 from dataclasses import dataclass, field
+from support.BoundingBox import BoundingBox
 import support.yolo_config as yc
+from support.DetectedObject import DetectedObject
 
 @dataclass
 class ModelNet:
@@ -9,6 +11,7 @@ class ModelNet:
     model_type: str
     confidence_threshold: float
     nms_threshold: float
+    object_type: str
     
     target_whT: int = field(init=False)
     target_hhT: int = field(init=False)
@@ -32,11 +35,30 @@ class ModelNet:
         self.model.setInputParams(size=(self.target_whT, self.target_hhT), scale=1/255)
         print(f'ModelNet configuration completed')
 
-    def detect(self, img):
+    def detect(self, img) -> list:
+        frame_objects: list[DetectedObject] = []
         # return example(class_ids, scores, boxes) = detect(img)
-        return self.model.detect(img, 
-                                 nmsThreshold=self.nms_threshold,
-                                 confThreshold=self.confidence_threshold)
+        
+        (class_ids, scores, boxes) = self.model.detect(img, 
+                                                       nmsThreshold=self.nms_threshold,
+                                                       confThreshold=self.confidence_threshold)
+    
+        for idx, box in enumerate(boxes, start=0):
+            className = self.classes[class_ids[idx]]
+            confidence = scores[idx]
+            object_box = BoundingBox(top_left_x=box[0],
+                                     top_left_y=box[1],
+                                     width=box[2],
+                                     height=box[3])
+            frame_objects.append(DetectedObject(bbox=object_box,
+                                                classID=class_ids[idx],
+                                                className=className,
+                                                confidence=confidence,
+                                                object_type=self.object_type))
+        
+        return frame_objects
+            
+    
    
 def get_classNames(classFile):
     # Coco info

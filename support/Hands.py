@@ -1,12 +1,13 @@
 import cv2
 import mediapipe as mp
-from support.DrawingManager import DrawingManager
+#from support.DrawingManager import DrawingManager
 from support.BoundingBox import BoundingBox
+from support.DetectedHand import DetectedHand
 
 class Hands:
 
     def __init__(self, 
-                 drawingManager: DrawingManager,
+                 object_type: str,
                  static_image_mode=False, 
                  max_num_hands=10, 
                  min_detection_confidence=0.5, 
@@ -18,7 +19,7 @@ class Hands:
         :param detectionCon: Minimum Detection Confidence Threshold
         :param minTrackCon: Minimum Tracking Confidence Threshold
         """
-        self.drawingManager = drawingManager
+        self.object_type=object_type
         self.static_image_mode = static_image_mode
         self.max_num_hands = max_num_hands
         self.min_detection_confidence = min_detection_confidence
@@ -37,7 +38,7 @@ class Hands:
 
     def findHands(self, 
                   img, 
-                  draw=True, 
+                  #draw=True, 
                   flipType=True):
         
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -46,15 +47,12 @@ class Hands:
         self.results = self.hands.process(imgRGB)
         imgRGB.flags.writeable = True
         
-        
-        allHands = []
+        detected_hands: list[DetectedHand] = []
 
         h, w, c = img.shape
 
         if self.results.multi_hand_landmarks:
             for handType, handLms in zip(self.results.multi_handedness, self.results.multi_hand_landmarks):
-                myHand = {}
-
                 ## lmList
                 mylmList = []
                 xList = []
@@ -76,32 +74,46 @@ class Hands:
                                    width = boxW,
                                    height = boxH)
 
-                myHand["lmList"] = mylmList
-
                 if flipType:
                     if handType.classification[0].label == "Right":
-                        myHand["type"] = "Left"
+                        hand_type = "Left"
                     else:
-                        myHand["type"] = "Right"
+                        hand_type = "Right"
                 else:
-                    myHand["type"] = handType.classification[0].label
-                allHands.append(myHand)
+                    hand_type = handType.classification[0].label
+                
+                detected_hands.append(DetectedHand(bbox = bbox,
+                                                   classID = None,
+                                                   className=hand_type,
+                                                   confidence = None,
+                                                   object_type=self.object_type,
+                                                   hand_landmarks=handLms))
+                
 
                 ## draw
-                if draw:
-                    self.mpDraw.draw_landmarks(img, 
-                                               handLms,
-                                               self.mpHands.HAND_CONNECTIONS,
-                                               self.mp_drawing_styles.get_default_hand_landmarks_style(),
-                                               self.mp_drawing_styles.get_default_hand_connections_style())
+                #if draw:
+                #    self.mpDraw.draw_landmarks(img, 
+                #                               handLms,
+                #                               self.mpHands.HAND_CONNECTIONS,
+                #                               self.mp_drawing_styles.get_default_hand_landmarks_style(),
+                #                               self.mp_drawing_styles.get_default_hand_connections_style())
                     
-                    self.drawingManager.show_bounding_box_modelNet(img=img,
-                                         bbox=bbox,
-                                         classID=None,
-                                         class_name=myHand["type"],
-                                         confidence=None,
-                                         show_labels=True,
-                                         weight=1)                    
+#                    self.drawingManager.show_bounding_box_modelNet(img=img,
+#                                         bbox=bbox,
+#                                         classID=None,
+#                                         class_name=myHand["type"],
+#                                         confidence=None,
+#                                         show_labels=True,
+#                                         weight=1)                    
                     
-        return allHands, img
+        return detected_hands
 
+
+    def draw_hands(self,
+                    img,
+                    hand_landmarks):
+        self.mpDraw.draw_landmarks(img,
+                                    hand_landmarks,
+                                    self.mpHands.HAND_CONNECTIONS,
+                                    self.mp_drawing_styles.get_default_hand_landmarks_style(),
+                                    self.mp_drawing_styles.get_default_hand_connections_style())

@@ -41,10 +41,14 @@ class IOManager:
             self.operatingConfig.SHOW_FPS = not self.operatingConfig.SHOW_FPS
         elif key%256 == 100: #small d
             self.operatingConfig.MODELNET_DETECT = not self.operatingConfig.MODELNET_DETECT
+        elif key%256 == 98: #small b
+            self.operatingConfig.SHOW_BOUNDING_BOXES = not self.operatingConfig.SHOW_BOUNDING_BOXES    
         elif key%256 == 108: # small l (letter L)
             self.operatingConfig.SHOW_LABELS = not self.operatingConfig.SHOW_LABELS
-        elif key%256 == 104:
+        elif key%256 == 104: # small h 
             self.operatingConfig.SHOW_HANDS = not self.operatingConfig.SHOW_HANDS
+        elif key%256 == 72: # capital H
+            self.operatingConfig.FIND_HANDS = not self.operatingConfig.FIND_HANDS
         elif key%256 == 105: # small i (letter eye)
             self.operatingConfig.SHOW_RUNTIME_CONFIG = not self.operatingConfig.SHOW_RUNTIME_CONFIG
         

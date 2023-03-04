@@ -3,101 +3,120 @@ import cv2 as cv
 from support.BoundingBox import BoundingBox
 from statistics import mean
 import time
-from support.model_net import ModelNet
+from support.ModelNet import ModelNet
+from support.DetectedObject import DetectedObject
+from support.Hands import Hands
 
 class DrawingManager:
     
     def __init__ (self,
-                  operatingConfig: OperatingConfig):
+                  operatingConfig: OperatingConfig,
+                  mpHands: Hands):
         self.operatingConfig = operatingConfig
+        self.mpHands = mpHands
         
-    def show_bounding_box_modelNet(self,
-                                   img, 
-                                   bbox: BoundingBox, 
-                                   classID, 
-                                   class_name, 
-                                   confidence, 
-                                   show_labels, 
-                                   weight=1):
+    def draw_results(self,
+                     img, 
+                     detected_objects: list[DetectedObject], 
+                     weight=1):
         
-        self.draw_bounding_box(img=img,
-                               bbox=bbox,
-                               classID=classID,
-                               weight=weight)
         
-        if show_labels:
-            x, y = bbox.get_top_left()
-            
-            self.show_label(img=img,
-                            x=x,
-                            y=y,
-                            class_name=class_name,
-                            confidence=confidence,
-                            classID=classID)    
+        if self.operatingConfig.SHOW_BOUNDING_BOXES:
+            self.draw_bounding_box(img=img,
+                                   detected_objects=detected_objects)
+        
+        if self.operatingConfig.SHOW_LABELS:
+             self.show_label(img=img,
+                             detected_objects=detected_objects)
+        
+        if self.operatingConfig.SHOW_HANDS:
+            self.show_hands(img=img,
+                            detected_objects=detected_objects)
+        
+        ###########################################################
+        # General visual display info
+        if self.operatingConfig.SHOW_FPS:
+            self.show_fps(img=img)
+        
+        if (self.operatingConfig.SHOW_RUNTIME_CONFIG or 
+            self.operatingConfig.show_runtime_config_until_frame > self.operatingConfig.frame_counter):
+
+            img = self.write_config_info(img=img)
+        #=============================================================
         
         return img
 
+    def show_hands(self,
+                   img,
+                   detected_objects: list[DetectedObject]):
+        for obj in detected_objects:
+            if obj.object_type == self.operatingConfig.OBJECT_HAND:
+                self.mpHands.draw_hands(img=img,
+                                        hand_landmarks=obj.hand_landmarks)
+               
+
     def draw_bounding_box(self,
                           img,
-                          bbox: BoundingBox, 
-                          classID, 
+                          detected_objects: list[DetectedObject],
                           weight=1):
         
-        colour=self.get_class_colour(classID)
-        
-        x,y = bbox.get_top_left()
-        w = bbox.width
-        h = bbox.height
-        
-        cv.rectangle(img,(x,y), (x+w, y+h), colour, weight)
-        
-        line_width_max = 50
-        line_width = min(int(bbox.width/2 * 0.30), line_width_max)
-        line_height = min(int(bbox.height/2 * 0.30), line_width_max)
-        line_thickness_w = 3
-        line_thickness_h = 3
-        
-        # Top left
-        cv.line(img, (x,y), (x + line_width, y), colour, thickness=line_thickness_w)
-        cv.line(img, (x,y), (x, y + line_height), colour, thickness=line_thickness_h)
-        
-        # Top right
-        cv.line(img, (x + w,y), (x + w - line_width, y), colour, thickness=line_thickness_w)
-        cv.line(img, (x + w,y), (x + w, y + line_height), colour, thickness=line_thickness_h)
-        
-        # Bottom left
-        cv.line(img, (x,y + h), (x + line_width, y + h), colour, thickness=line_thickness_w)
-        cv.line(img, (x,y + h), (x, y + h - line_height), colour, thickness=line_thickness_h)
-        
-        # Bottom right
-        cv.line(img, (x + w, y + h), (x + w - line_width, y + h), colour, thickness=line_thickness_w)
-        cv.line(img, (x + w, y + h), (x + w, y + h - line_height), colour, thickness=line_thickness_h)
+        # Iterate through all objects and draw
+        for obj in detected_objects:
+            
+            colour=self.get_class_colour(obj.classID)
+            
+            x,y = obj.bbox.get_top_left()
+            w = obj.bbox.width
+            h = obj.bbox.height
+            
+            cv.rectangle(img,(x,y), (x+w, y+h), colour, weight)
+            
+            line_width_max = 50
+            line_width = min(int(obj.bbox.width/2 * 0.30), line_width_max)
+            line_height = min(int(obj.bbox.height/2 * 0.30), line_width_max)
+            line_thickness_w = 3
+            line_thickness_h = 3
+            
+            # Top left
+            cv.line(img, (x,y), (x + line_width, y), colour, thickness=line_thickness_w)
+            cv.line(img, (x,y), (x, y + line_height), colour, thickness=line_thickness_h)
+            
+            # Top right
+            cv.line(img, (x + w,y), (x + w - line_width, y), colour, thickness=line_thickness_w)
+            cv.line(img, (x + w,y), (x + w, y + line_height), colour, thickness=line_thickness_h)
+            
+            # Bottom left
+            cv.line(img, (x,y + h), (x + line_width, y + h), colour, thickness=line_thickness_w)
+            cv.line(img, (x,y + h), (x, y + h - line_height), colour, thickness=line_thickness_h)
+            
+            # Bottom right
+            cv.line(img, (x + w, y + h), (x + w - line_width, y + h), colour, thickness=line_thickness_w)
+            cv.line(img, (x + w, y + h), (x + w, y + h - line_height), colour, thickness=line_thickness_h)
         
         return img
 
 
     def show_label(self,
                    img, 
-                   x,
-                   y,
-                   class_name,
-                   confidence: int,
-                   classID):
+                   detected_objects: list[DetectedObject]):
         
-        if confidence is None:
-            confidence_label="NA"
-        else:
-            confidence_label=f'{class_name} {int(confidence*100)}%'
-        
-        colour = self.get_class_colour(classID=classID)
-        cv.putText(img,
-                confidence_label,
-                (x,y-5), 
-                cv.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                colour,
-                2
-                )
+        for obj in detected_objects:
+            
+            if obj.confidence is None:
+                confidence_label=f'{obj.className}'
+            else:
+                confidence_label=f'{obj.className} {int(obj.confidence*100)}%'
+            
+            colour = self.get_class_colour(classID=obj.classID)
+            x, y = obj.bbox.get_top_left()
+            cv.putText(img,
+                    confidence_label,
+                    (x,y-5), 
+                    cv.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    colour,
+                    2
+                    )
         return img
 
     def get_class_colour(self,
@@ -112,12 +131,11 @@ class DrawingManager:
         return colour
 
     def write_config_info(self,
-                          img,
-                          modelNet:ModelNet):
+                          img):
         h, w, c = img.shape
 
         cv.putText(img, 
-                f'NMS threshold: {str(modelNet.nms_threshold)}', 
+                f'NMS threshold: {str(self.operatingConfig.NMS_THRESHOLD)}', 
                 (40, h-50), 
                 self.operatingConfig.font, 
                 1, 
@@ -126,7 +144,7 @@ class DrawingManager:
                 cv.LINE_AA)
 
         cv.putText(img, 
-                f'Confidence threshold: {str(modelNet.confidence_threshold)}', 
+                f'Confidence threshold: {str(self.operatingConfig.CONFIDENCE_THRESHOLD)}', 
                 (40, h-90), 
                 self.operatingConfig.font, 
                 1, 
@@ -135,7 +153,7 @@ class DrawingManager:
                 cv.LINE_AA)
 
         cv.putText(img, 
-                f'Model: {modelNet.model_type}', 
+                f'Model: {self.operatingConfig.detection_model}', 
                 (40, h-130), 
                 self.operatingConfig.font, 
                 1, 

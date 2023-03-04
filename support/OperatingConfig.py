@@ -16,6 +16,12 @@ class OperatingConfig:
     className_file: str
     #=============================================    
     
+    ##############################################
+    # Detection types used in object creation
+    # and determining which object to draw in frame
+    OBJECT_GENERIC='generic object'
+    OBJECT_HAND='hand'    
+    
     ###############################################
     # ModelNet parameters
     # Default modelnet to load
@@ -32,12 +38,14 @@ class OperatingConfig:
 
     #######################################################
     #Configs for changing display while running
+    MODELNET_DETECT: bool = False   
+    FIND_HANDS: bool = False
+    
     SHOW_FPS: bool = False
     SHOW_RUNTIME_CONFIG: bool = False
-    
     SHOW_LABELS: bool = False
+    SHOW_BOUNDING_BOXES: bool = False
     
-    MODELNET_DETECT: bool = False   
     SHOW_HANDS: bool = False
     #======================================================
 
@@ -90,5 +98,8 @@ class OperatingConfig:
         print(f'OpenCV Version: {cv.__version__}')
         print(f'CUDA enabled devices: {cv.cuda.getCudaEnabledDeviceCount()}')
         print(f'CWD: {os.getcwd()}')
+    
+    def draw_results(self) -> bool:
+        return  self.SHOW_FPS or self.SHOW_RUNTIME_CONFIG or self.SHOW_LABELS or self.SHOW_BOUNDING_BOXES or self.SHOW_HANDS
         
  

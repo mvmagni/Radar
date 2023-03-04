@@ -34,12 +34,12 @@ ioManager = IOManager(operatingConfig=operatingConfig)
 
 # Webcam
 #cap = cv.VideoCapture(0,cv.CAP_DSHOW)
-#cap = cv.VideoCapture(1,cv.CAP_DSHOW)
-#CAP_WEBCAM=True
+cap = cv.VideoCapture(1,cv.CAP_DSHOW)
+CAP_WEBCAM=True
 
 # Video file defined above
-CAP_WEBCAM=False
-cap = cv.VideoCapture(f'{config_system["project_root_dir"]}/{config_system["sample_video"]}')
+#CAP_WEBCAM=False
+#cap = cv.VideoCapture(f'{config_system["project_root_dir"]}/{config_system["sample_video"]}')
 #cap = cv.VideoCapture(f'd:/Radar_Support/Hand_Tracking_Full.mp4')
 #cap = cv.VideoCapture(f'd:/Radar_Support/GoWeb.mp4')
 
@@ -94,7 +94,7 @@ while operatingConfig.RUN_PROGRAM:
         if CAP_WEBCAM:
             frame = cv.flip(frame, 1)
         
-        # If first frame show image info for debug
+        # If first frame show image info for debugi
         if operatingConfig.frame_counter == 1:
             print(f'Image size: {frame.shape}')
 
