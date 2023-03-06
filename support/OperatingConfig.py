@@ -21,6 +21,7 @@ class OperatingConfig:
     # and determining which object to draw in frame
     OBJECT_GENERIC='generic object'
     OBJECT_HAND='hand'    
+    OBJECT_POSE='pose'
     
     ###############################################
     # ModelNet parameters

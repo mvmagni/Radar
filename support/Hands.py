@@ -88,24 +88,7 @@ class Hands:
                                                    confidence = None,
                                                    object_type=self.object_type,
                                                    hand_landmarks=handLms))
-                
-
-                ## draw
-                #if draw:
-                #    self.mpDraw.draw_landmarks(img, 
-                #                               handLms,
-                #                               self.mpHands.HAND_CONNECTIONS,
-                #                               self.mp_drawing_styles.get_default_hand_landmarks_style(),
-                #                               self.mp_drawing_styles.get_default_hand_connections_style())
-                    
-#                    self.drawingManager.show_bounding_box_modelNet(img=img,
-#                                         bbox=bbox,
-#                                         classID=None,
-#                                         class_name=myHand["type"],
-#                                         confidence=None,
-#                                         show_labels=True,
-#                                         weight=1)                    
-                    
+                  
         return detected_hands
 
 
