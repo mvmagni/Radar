@@ -3,6 +3,7 @@ from support.ModelNet import ModelNet
 from support.Hands import Hands
 from support.DrawingManager import DrawingManager
 from support.DetectedObject import DetectedObject
+from support.MoveNet import MoveNet
 
 class FrameManager:
     
@@ -10,12 +11,17 @@ class FrameManager:
                  operatingConfig: OperatingConfig):     
         self.operatingConfig = operatingConfig
         self.modelNet = self.create_modelNet()
+        self.moveNet = self.create_moveNet()
         self.mpHands = self.create_hand_track()
         self.drawingManager = self.create_drawingManager()
-        
+    
+    def create_moveNet(self):
+        return MoveNet(self.operatingConfig.OBJECT_POSE)
+    
     def create_drawingManager(self):
         return DrawingManager(operatingConfig=self.operatingConfig,
-                              mpHands=self.mpHands)
+                              mpHands=self.mpHands,
+                              moveNet=self.moveNet)
     
     def create_modelNet(self):
         return ModelNet(config_dir=self.operatingConfig.model_config_dir,
@@ -45,17 +51,15 @@ class FrameManager:
             if not (self.operatingConfig.CONFIDENCE_THRESHOLD == self.modelNet.confidence_threshold):
                 self.modelNet.confidence_threshold = self.operatingConfig.CONFIDENCE_THRESHOLD
             
-            # Returns a list[DetectedObject]
             detected_objects += self.modelNet.detect(img=img)
-            #print(type(modelNet_objects))
-            #print(type(detected_objects))
-            #detected_objects = detected_objects + modelNet_objects
-            
             
         if self.operatingConfig.FIND_HANDS:
             detected_objects += self.mpHands.findHands(img=img)
-            
-               
+        
+        if self.operatingConfig.FIND_POSE:
+            detected_objects += self.moveNet.findPoses(img=img)
+        
+        
         if self.operatingConfig.draw_results():
             img = self.drawingManager.draw_results(img=img, 
                                                    detected_objects=detected_objects)

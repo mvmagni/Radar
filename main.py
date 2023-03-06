@@ -106,7 +106,7 @@ while operatingConfig.RUN_PROGRAM:
         cv.imshow(f'{config_variables["main_window_name"]}',processed_frame)
 
         ####################################################
-        # Handle key inputs
+        # Handle key inputsb
         #
         # Esc to close, space to write a copy of the image
         # pass any keypress to be processed

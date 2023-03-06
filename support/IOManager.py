@@ -49,6 +49,14 @@ class IOManager:
             self.operatingConfig.SHOW_HANDS = not self.operatingConfig.SHOW_HANDS
         elif key%256 == 72: # capital H
             self.operatingConfig.FIND_HANDS = not self.operatingConfig.FIND_HANDS
+        
+        elif key%256 == 112: # small p 
+            print("show pose toggled")
+            self.operatingConfig.SHOW_POSE = not self.operatingConfig.SHOW_POSE
+        elif key%256 == 80: # capital P
+            print("find pose toggled")
+            self.operatingConfig.FIND_POSE = not self.operatingConfig.FIND_POSE
+            
         elif key%256 == 105: # small i (letter eye)
             self.operatingConfig.SHOW_RUNTIME_CONFIG = not self.operatingConfig.SHOW_RUNTIME_CONFIG
         

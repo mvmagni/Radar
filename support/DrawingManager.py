@@ -6,14 +6,17 @@ import time
 from support.ModelNet import ModelNet
 from support.DetectedObject import DetectedObject
 from support.Hands import Hands
+from support.MoveNet import MoveNet
 
 class DrawingManager:
     
     def __init__ (self,
                   operatingConfig: OperatingConfig,
-                  mpHands: Hands):
+                  mpHands: Hands,
+                  moveNet: MoveNet):
         self.operatingConfig = operatingConfig
         self.mpHands = mpHands
+        self.moveNet = moveNet
         
     def draw_results(self,
                      img, 
@@ -33,6 +36,10 @@ class DrawingManager:
             self.show_hands(img=img,
                             detected_objects=detected_objects)
         
+        if self.operatingConfig.SHOW_POSE:
+            self.show_pose(img=img,
+                           detected_objects=detected_objects)
+        
         ###########################################################
         # General visual display info
         if self.operatingConfig.SHOW_FPS:
@@ -46,6 +53,17 @@ class DrawingManager:
         
         return img
 
+    def show_pose(self,
+                  img,
+                  detected_objects: list[DetectedObject]):
+        print("DrawingManager.show_pose called")
+        for obj in detected_objects:
+            if obj.object_type == self.operatingConfig.OBJECT_POSE:
+                self.moveNet.draw_poses(img=img,
+                                        pose_keypoints=obj.pose_keypoints,
+                                        confidence_threshold=0.2)
+
+
     def show_hands(self,
                    img,
                    detected_objects: list[DetectedObject]):
@@ -53,7 +71,7 @@ class DrawingManager:
             if obj.object_type == self.operatingConfig.OBJECT_HAND:
                 self.mpHands.draw_hands(img=img,
                                         hand_landmarks=obj.hand_landmarks)
-               
+            
 
     def draw_bounding_box(self,
                           img,

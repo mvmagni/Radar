@@ -9,7 +9,7 @@ from dataclasses import dataclass
 class DetectedPose(DetectedObject):
     
     # Required fields (in addition to parent class)
-    keypoints_with_scores: Any
+    pose_keypoints: Any
     
     def draw(self):
         pass

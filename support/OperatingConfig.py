@@ -41,6 +41,7 @@ class OperatingConfig:
     #Configs for changing display while running
     MODELNET_DETECT: bool = False   
     FIND_HANDS: bool = False
+    FIND_POSE: bool = False
     
     SHOW_FPS: bool = False
     SHOW_RUNTIME_CONFIG: bool = False
@@ -48,6 +49,7 @@ class OperatingConfig:
     SHOW_BOUNDING_BOXES: bool = False
     
     SHOW_HANDS: bool = False
+    SHOW_POSE: bool = False
     #======================================================
 
     #######################################################
